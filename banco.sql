@@ -87,3 +87,4 @@ ALTER TABLE cliente
 MODIFY COLUMN endereco VARCHAR(100) NOT NULL;
 
 INSERT INTO cliente (id_cliente, nome_usuario, cpf, email, telefone, endereco) VALUES("1", "iago", "593.873.328-61", "iagostoso@gmail.com", "11978015861", "Rua IAGOSTOSO123");
+

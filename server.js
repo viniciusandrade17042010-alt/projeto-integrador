@@ -11,6 +11,15 @@ app.use(cors()); // Habilita o CORS para permitir a comunicação com o Front-en
 
 const PORTA = 3000; // Definição da porta onde o servidor vai rodar
 
+app.get("/", async (req, res) =>{
+  try {
+    res.status(200).json({mensagem: "Programa rodando certinho!"});
+  }
+  catch (erro){
+    console.error(erro);
+    res.status(500).json({ message: "Erro no sistema", error: error.message });
+  }
+});
 
 // ==========================================
 // 2. ROTAS DE CLIENTES
@@ -113,36 +122,18 @@ app.delete("/cliente/:id", async (req, res) => {
 });
 
 // ==========================================
-// 3. ROTAS DE CADASTRO
+// 3. ROTAS DO CARRINHO DE COMPRAS (COMPLETAS E CORRIGIDAS)
 // ==========================================
 
-// Rota POST: Realizar o registro complementar de cadastro vinculado ao cliente
-app.post('/cadastro', async (req, res) => {
-  try {
-    const { id_cliente, id_cadastro, data_criacao } = req.body;
-
-    const sql = "INSERT INTO cadastro (id_cliente, id_cadastro, data_criacao) VALUES (?, ?, ?);";
-    const [resposta] = await conexao.query(sql, [id_cliente, id_cadastro, data_criacao]);
-
-    res.status(200).json({
-        id: resposta.insertId,
-        message: "Cadastro realizado!"
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erro ao realizar cadastro", error: error.message });
-  }
-});
-
-
-// ==========================================
-// 4. ROTAS DO CARRINHO DE COMPRAS (SPRINT 6)
-// ==========================================
-
-// 1. ADICIONAR ITEM AO CARRINHO (Com Validação de Estoque)
+// 1. ADICIONAR ITEM AO CARRINHO (Com Validação de Estoque e Prevenção de Duplicidade)
 app.post('/carrinho', async (req, res) => {
   try {
     const { id_cliente, id_produto, quantidade } = req.body;
+
+    // Validação básica de entrada para garantir dados corretos
+    if (!id_cliente || !id_produto || !quantidade || quantidade <= 0) {
+      return res.status(400).json({ message: "Dados inválidos. Verifique o cliente, o produto e se a quantidade é maior que zero." });
+    }
 
     // Passo 1: Verificar no banco se o produto existe e qual é o estoque atual dele
     const [produtoRows] = await conexao.query(
@@ -150,7 +141,6 @@ app.post('/carrinho', async (req, res) => {
       [id_produto]
     );
 
-    // Se não encontrar o produto, retorna erro 404
     if (produtoRows.length === 0) {
       return res.status(404).json({ message: "Produto não encontrado!" });
     }
@@ -164,14 +154,40 @@ app.post('/carrinho', async (req, res) => {
       });
     }
 
-    // Passo 3: Se passou na validação, insere o produto na tabela carrinho_de_compra
-    const sql = "INSERT INTO carrinho_de_compra (id_cliente, id_produto, quantidade) VALUES (?, ?, ?);";
-    const [resposta] = await conexao.query(sql, [id_cliente, id_produto, quantidade]);
+    // Passo 3: Verificar se o item JÁ EXISTE no carrinho deste cliente
+    const [carrinhoExistente] = await conexao.query(
+      "SELECT id_carrinho, quantidade FROM carrinho_de_compra WHERE id_cliente = ? AND id_produto = ?",
+      [id_cliente, id_produto]
+    );
 
-    res.status(201).json({
-      id_carrinho: resposta.insertId,
-      message: "Produto adicionado ao carrinho com sucesso!"
-    });
+    if (carrinhoExistente.length > 0) {
+      // Se já existe, atualizamos somando a quantidade nova
+      const itemAtual = carrinhoExistente[0];
+      const novaQuantidade = itemAtual.quantidade + quantidade;
+
+      // Valida se a nova quantidade somada respeita o estoque
+      if (novaQuantidade > produto.estoque) {
+        return res.status(400).json({ 
+          message: `Estoque insuficiente! Você já tem ${itemAtual.quantidade} no carrinho e tentou adicionar mais ${quantidade}. Máximo disponível: ${produto.estoque}.` 
+        });
+      }
+
+      await conexao.query(
+        "UPDATE carrinho_de_compra SET quantidade = ? WHERE id_carrinho = ?",
+        [novaQuantidade, itemAtual.id_carrinho]
+      );
+
+      return res.status(200).json({ message: "Quantidade atualizada no carrinho com sucesso!" });
+    } else {
+      // Se não existe, insere um novo registro normalmente
+      const sql = "INSERT INTO carrinho_de_compra (id_cliente, id_produto, quantidade) VALUES (?, ?, ?);";
+      const [resposta] = await conexao.query(sql, [id_cliente, id_produto, quantidade]);
+
+      return res.status(201).json({
+        id_carrinho: resposta.insertId,
+        message: "Produto adicionado ao carrinho com sucesso!"
+      });
+    }
 
   } catch (error) {
     console.error(error);
@@ -179,12 +195,11 @@ app.post('/carrinho', async (req, res) => {
   }
 });
 
-// 2. BUSCAR ITENS DO CARRINHO DE UM CLIENTE (Utilizando INNER JOIN para unir dados do produto)
+// 2. BUSCAR ITENS DO CARRINHO DE UM CLIENTE (Utilizando INNER JOIN)
 app.get('/carrinho/:id_cliente', async (req, res) => {
   try {
     const id_cliente = req.params.id_cliente;
     
-    // Consulta com INNER JOIN para puxar nome, preço e calcular o subtotal multiplicando quantidade x preço
     const sql = `
       SELECT c.id_carrinho, c.quantidade, p.id_produto, p.nome_produto, p.preco, p.estoque, 
              (c.quantidade * p.preco) AS subtotal
@@ -202,13 +217,17 @@ app.get('/carrinho/:id_cliente', async (req, res) => {
   }
 });
 
-// 3. ALTERAR QUANTIDADE DE UM ITEM NO CARRINHO (Com Validação de Estoque)
+// 3. ALTERAR QUANTIDADE DE UM ITEM NO CARRINHO (Com Validação de Entrada e Estoque)
 app.put('/carrinho/:id_carrinho', async (req, res) => {
   try {
     const id_carrinho = req.params.id_carrinho;
     const { quantidade } = req.body;
 
-    // Passo 1: Descobrir qual é o ID do produto que está associado a este item do carrinho
+    if (!quantidade || quantidade <= 0) {
+      return res.status(400).json({ message: "A quantidade deve ser maior que zero." });
+    }
+
+    // Passo 1: Descobrir qual é o ID do produto associado a este item do carrinho
     const [itemRows] = await conexao.query(
       "SELECT id_produto FROM carrinho_de_compra WHERE id_carrinho = ?", 
       [id_carrinho]
@@ -256,7 +275,6 @@ app.delete('/carrinho/:id_carrinho', async (req, res) => {
   try {
     const id_carrinho = req.params.id_carrinho;
 
-    // Comando SQL para deletar o registro do carrinho com base no ID
     const sql = "DELETE FROM carrinho_de_compra WHERE id_carrinho = ?";
     const [resposta] = await conexao.query(sql, [id_carrinho]);
 
@@ -272,6 +290,102 @@ app.delete('/carrinho/:id_carrinho', async (req, res) => {
   }
 });
 
+// ==========================================
+// 4. ROTAS DE PRODUTOS
+// ==========================================
+
+// Rota POST: Cadastrar um novo produto
+app.post('/produto', async (req, res) => {
+  try {
+    const { nome_produto, categoria, preco, estoque } = req.body;
+
+    // Validação básica
+    if (!nome_produto || !categoria || preco === undefined || estoque === undefined) {
+      return res.status(400).json({ message: "Preencha todos os campos obrigatórios do produto." });
+    }
+
+    const sql = "INSERT INTO produto (nome_produto, categoria, preco, estoque) VALUES (?, ?, ?, ?);";
+    const [resposta] = await conexao.query(sql, [nome_produto, categoria, preco, estoque]);
+
+    res.status(201).json({
+      id_produto: resposta.insertId,
+      message: "Produto cadastrado com sucesso!"
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao cadastrar produto", error: error.message });
+  }
+});
+
+// Rota GET: Listar todos os produtos cadastrados
+app.get('/produto', async (req, res) => {
+  try {
+    const sql = "SELECT * FROM produto";
+    const [resposta] = await conexao.query(sql);
+    res.json(resposta);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao buscar produtos", error: error.message });
+  }
+});
+
+// Rota GET: Buscar produto específico pelo ID
+app.get('/produto/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const sql = "SELECT * FROM produto WHERE id_produto = ?";
+    
+    const [resultado] = await conexao.query(sql, [id]);
+
+    if (resultado.length === 0) {
+      return res.status(404).json({ message: "Produto não encontrado." });
+    }
+
+    return res.status(200).json(resultado[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao buscar produto", error: error.message });
+  }
+});
+
+// Rota PUT: Atualizar dados de um produto pelo ID
+app.put("/produto/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { nome_produto, categoria, preco, estoque } = req.body;
+
+    const sql = "UPDATE produto SET nome_produto=?, categoria=?, preco=?, estoque=? WHERE id_produto=?";
+    const [resposta] = await conexao.query(sql, [nome_produto, categoria, preco, estoque, id]);
+
+    if (resposta.affectedRows > 0) {
+      res.json({ message: "Produto atualizado com sucesso!" });
+    } else {
+      res.status(404).json({ message: "Produto não encontrado." });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao atualizar produto", error: error.message });
+  }
+});
+
+// Rota DELETE: Excluir um produto pelo ID
+app.delete("/produto/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const sql = "DELETE FROM produto WHERE id_produto = ?";
+    
+    const [resposta] = await conexao.query(sql, [id]);
+
+    if (resposta.affectedRows > 0) {
+      res.json({ message: "Produto excluído com sucesso!" });
+    } else {
+      res.status(404).json({ message: "Produto não encontrado." });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao excluir produto", error: error.message });
+  }
+});
 
 // ==========================================
 // 5. INICIALIZAÇÃO DO SERVIDOR
