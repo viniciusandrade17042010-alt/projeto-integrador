@@ -1,0 +1,32 @@
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1rem 0;
+    text-align: center;
+}
+main {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 40px auto;
+    display: flex;
+    justify-content: space-around;
+}
+section {
+    background-color: white;
+    padding: 50px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-left: 100px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+    flex: 1;
+}
+footer {
+    background-color: #3c6f3e;
+    color: white;
+    font-size: 0.9em;
+    text-align: center;
+    padding: 15px 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
