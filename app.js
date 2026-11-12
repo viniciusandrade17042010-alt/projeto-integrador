@@ -19,7 +19,7 @@ app.get("/", async (req, res) =>{
     console.error(erro);
     res.status(500).json({ message: "Erro no sistema", error: error.message });
   }
-});
+});        
 
 // ==========================================
 // 2. ROTAS DE CLIENTES
@@ -218,7 +218,7 @@ app.get('/carrinho/:id_cliente', async (req, res) => {
 });
 
 // 3. ALTERAR QUANTIDADE DE UM ITEM NO CARRINHO (Com Validação de Entrada e Estoque)
-app.put('/carrinho/:id_carrinho', async (req, res) => {
+('/carrinho/:id_carrinho', async (req, res) => {
   try {
     const id_carrinho = req.params.id_carrinho;
     const { quantidade } = req.body;
