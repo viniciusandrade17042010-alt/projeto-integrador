@@ -8,9 +8,16 @@ header {
     top: 0; /* cola o header no topo*/
     left: 0; /* cola o header na esquerda*/
     padding: 20px; /* cria um espaço interno dentro de um elemento, ou seja, deixa um espaço entre a margem e o que está dentro do header*/
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 .search-bar{
     align-items: center;
+}
+input{
+    padding: 8px;
+    margin: 30px
     
 }
 h1{
@@ -41,8 +48,9 @@ footer {
     color: white;
     font-size: 0.9em;
     text-align: center;
-    padding: 15px 0;
+    padding: 10px 0;
     position: fixed;
     width: 100%;
     bottom: 0;
+    left: 0;
 }
