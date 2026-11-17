@@ -6,12 +6,12 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
+    background-color: #F8FAFC;
     padding-bottom: 80px; 
 }
 
 header {
-    background-color: #4CAF50;
+    background-color:#0F172A;
     color: white;
     width: 100%; /* deixa a largura horizontal do header em 100% da tela*/
     z-index: 1000; /* deixa o header por cima de qualquer outro elemento dessa página*/
@@ -63,7 +63,7 @@ img {
 }
 
 footer {
-    background-color: #3c6f3e;
+    background-color: #0B0F19;
     color: white;
     font-size: 0.9em;
     text-align: center;
