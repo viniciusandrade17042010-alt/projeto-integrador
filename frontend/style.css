@@ -13,11 +13,23 @@ body {
 header {
     background-color: #4CAF50;
     color: white;
-    padding: 1.5rem 0;
-    text-align: center;
-    width: 100%;
+    width: 100%; /* deixa a largura horizontal do header em 100% da tela*/
+    z-index: 1000; /* deixa o header por cima de qualquer outro elemento dessa página*/
+    top: 0; /* cola o header no topo*/
+    left: 0; /* cola o header na esquerda*/
+    padding: 20px; /* cria um espaço interno dentro de um elemento, ou seja, deixa um espaço entre a margem e o que está dentro do header*/
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
-
+.search-bar{
+    align-items: center;
+}
+input{
+    padding: 8px;
+    margin: 30px
+    
+}
 main {
     max-width: 1000px;
     margin: 30px auto;
