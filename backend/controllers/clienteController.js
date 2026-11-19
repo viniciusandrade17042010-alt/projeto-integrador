@@ -3,8 +3,8 @@ import { ClienteModel } from '../models/clienteModel.js';
 export const ClienteController = {
   async cadastrar(req, res, next) {
     try {
-      const { nome, cpf, email, telefone, endereco } = req.body;
-      const id = await ClienteModel.criar({ nome, cpf, email, telefone, endereco });
+      const { nome, cpf, email, telefone, endereco, senha } = req.body;
+      const id = await ClienteModel.criar({ nome, cpf, email, telefone, endereco, senha });
 
       return res.status(200).json({
         id,
@@ -12,6 +12,22 @@ export const ClienteController = {
       });
     } catch (error) {
       error.customMessage = 'Erro ao cadastrar cliente';
+      next(error);
+    }
+  },
+
+  async login(req, res, next) {
+    try {
+      const { email, senha } = req.body;
+      const usuario = await ClienteModel.autenticar(email, senha);
+
+      if (!usuario) {
+        return res.status(401).json({ erro: 'E-mail ou senha inválidos!' });
+      }
+
+      return res.status(200).json({ usuario });
+    } catch (error) {
+      error.customMessage = 'Erro ao realizar login';
       next(error);
     }
   },

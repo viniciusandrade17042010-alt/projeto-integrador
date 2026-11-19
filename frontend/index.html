@@ -1,67 +1,168 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>projeto_integrador</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhysicTronic - Projeto Integrador</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>PhysicTronic</h1>
-        <div class="search-bar">
-            <input type="text" placeholder="🔍buscar produtos">
-        </div>
-    </header>
 
-    <main>
-        <div class="vitrine">
-            <section>
-                <h2>Conjunto eletromagnetismo</h2>
-                <img src="images/Conjuto eletromagnetismo_fisica.webp" alt="Conjunto eletromagnetismo">
-                <p>Categoria: Física</p>
-                <p>preço: R$ 42,00</p>
-            </section>
+  <!-- CABEÇALHO ÚNICO -->
+  <header class="navbar">
+    <div class="nav-esquerda">
+      <h1>PhysicTronic</h1>
+      <input type="text" id="busca" placeholder="Buscar produtos">
+    </div>
 
-            <section>
-                <h2>Conjunto Lentes</h2>
-                <img src="images/Conjuto optica.webp" alt="Conjunto Lentes">
-                <p>Categoria: Óptica</p>
-                <p>preço: R$ 67,00</p>
-            </section>
+    <div class="nav-direita">
+      <span id="saudacao-usuario" style="display:none; font-weight:bold;"></span>
+      
+      <button id="btn-abrir-auth" class="btn-conta" onclick="abrirModal('modal-auth')">
+        <i class="fa-solid fa-user"></i> Entrar / Criar Conta
+      </button>
 
-            <section>
-                <h2>Kit Arduíno</h2>
-                <img src="images/kit robotica.webp" alt="Kit Arduíno">
-                <p>Categoria: Robótica</p>
-                <p>preço: R$ 777,00</p>
-            </section>
+      <button id="btn-sair" class="btn-conta" style="display:none;" onclick="logout()">
+        Sair
+      </button>
 
-            <section>
-                <h2>Kit lançamento Horizontal</h2>
-                <img src="images/Kit lancamentoHorizontal_fisica.webp" alt="Kit lançamento Horizontal">
-                <p>Categoria: Física</p>
-                <p>preço: R$ 777,00</p>
-            </section>
+      <button class="btn-carrinho" onclick="abrirCarrinho()">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span id="contador-carrinho">0</span>
+      </button>
+    </div>
+  </header>
 
-            <section>
-                <h2>Kit equipamentos Arduíno</h2>
-                <img src="images/Kit equipamentos arduíno_robotica.webp" alt="Kit equipamentos Arduíno">
-                <p>Categoria: Robótica</p>
-                <p>preço: R$ 777,00</p>
-            </section>
+  <!-- CARROSSEL LANDING PAGE -->
+  <div class="carrossel-container">
+    <div class="slide ativo" style="background: linear-gradient(135deg, #0F172A, #1eaf31);">
+      <h2>Bem-vindo à PhysicTronic</h2>
+      <p>Equipamentos didáticos de Física, Óptica e Robótica para laboratórios e makers.</p>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #0F172A, #2ca448);">
+      <h2>Kits de Robótica e Arduíno</h2>
+      <p>Tudo para automação, sensores e prototipagem eletrônica.</p>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #0F172A, #0c7b1b);">
+      <h2>Experimentos de Física e Óptica</h2>
+      <p>Conjuntos completos de lentes, eletromagnetismo e lançamentos.</p>
+    </div>
+    <button class="carrossel-btn prev" onclick="mudarSlide(-1)">❮</button>
+    <button class="carrossel-btn next" onclick="mudarSlide(1)">❯</button>
+  </div>
 
-            <section>
-                <h2>Produto 6</h2>
-                <img src="images/microscopio_optica.webp" alt="Kit microscópio">
-                <p>Categoria: Óptica</p>
-                <p>preço: R$ 777,00</p>
-            </section>
-        </div>
-    </main>
+  <!-- SELEÇÃO DE TEMAS / CATEGORIAS -->
+  <nav class="categorias">
+    <button class="btn-cat ativo" onclick="filtrarCategoria('Todos', this)">Todos</button>
+    <button class="btn-cat" onclick="filtrarCategoria('Física', this)">Física</button>
+    <button class="btn-cat" onclick="filtrarCategoria('Óptica', this)">Óptica</button>
+    <button class="btn-cat" onclick="filtrarCategoria('Robótica', this)">Robótica</button>
+  </nav>
 
-    <footer>
-        <p>© 2026 Projeto Integrador - Turma DS1A</p>
-    </footer> 
+  <!-- VITRINE DE PRODUTOS (IDs 1 a 6 batendo com a tabela 'produto') -->
+  <main class="container-produtos">
+    <div class="card" data-categoria="Física">
+      <h2>Conjunto eletromagnetismo</h2>
+      <img src="images/Conjuto eletromagnetismo_fisica.webp" alt="Conjunto eletromagnetismo">
+      <p>Categoria: Física</p>
+      <p class="preco">Preço: R$ 42,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(1)">Adicionar ao carrinho</button>
+    </div>
+
+    <div class="card" data-categoria="Óptica">
+      <h2>Conjunto Lentes</h2>
+      <img src="images/Conjuto optica.webp" alt="Conjunto Lentes">
+      <p>Categoria: Óptica</p>
+      <p class="preco">Preço: R$ 67,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(2)">Adicionar ao carrinho</button>
+    </div>
+
+    <div class="card" data-categoria="Robótica">
+      <h2>Kit Arduíno</h2>
+      <img src="images/kit robotica.webp" alt="Kit Arduíno">
+      <p>Categoria: Robótica</p>
+      <p class="preco">Preço: R$ 777,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(3)">Adicionar ao carrinho</button>
+    </div>
+
+    <div class="card" data-categoria="Física">
+      <h2>Kit lançamento Horizontal</h2>
+      <img src="images/Kit lancamentoHorizontal_fisica.webp" alt="Kit lançamento Horizontal">
+      <p>Categoria: Física</p>
+      <p class="preco">Preço: R$ 777,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(4)">Adicionar ao carrinho</button>
+    </div>
+
+    <div class="card" data-categoria="Robótica">
+      <h2>Kit equipamentos Arduíno</h2>
+      <img src="images/Kit equipamentos arduíno_robotica.webp" alt="Kit equipamentos Arduíno">
+      <p>Categoria: Robótica</p>
+      <p class="preco">Preço: R$ 777,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(5)">Adicionar ao carrinho</button>
+    </div>
+
+    <div class="card" data-categoria="Óptica">
+      <h2>Kit microscópio</h2>
+      <img src="images/microscopio_optica.webp" alt="Kit microscópio">
+      <p>Categoria: Óptica</p>
+      <p class="preco">Preço: R$ 777,00</p>
+      <button class="btn-adicionar" onclick="adicionarAoCarrinho(6)">Adicionar ao carrinho</button>
+    </div>
+  </main>
+
+  <!-- MODAL: LOGIN E CRIAR CONTA -->
+  <div id="modal-auth" class="modal">
+    <div class="modal-conteudo">
+      <span class="fechar" onclick="fecharModal('modal-auth')">×</span>
+      
+      <!-- Tela de Login -->
+      <div id="box-login">
+        <h2>Entrar na Conta</h2>
+        <form onsubmit="fazerLogin(event)">
+          <input type="email" id="login-email" placeholder="E-mail de acesso" required>
+          <input type="password" id="login-senha" placeholder="Senha" required>
+          <button type="submit" class="btn-adicionar">Entrar</button>
+        </form>
+        <p style="margin-top:12px; font-size:14px;">
+          Não tem conta? <a href="#" onclick="alternarAuth('cadastro')">Criar conta</a>
+        </p>
+      </div>
+
+      <!-- Tela de Cadastro (Campos da tabela 'cliente' + 'login') -->
+      <div id="box-cadastro" style="display:none;">
+        <h2>Criar Conta</h2>
+        <form onsubmit="fazerCadastro(event)">
+          <input type="text" id="cad-nome" placeholder="Nome completo" required>
+          <input type="text" id="cad-cpf" placeholder="CPF (000.000.000-00)" required>
+          <input type="email" id="cad-email" placeholder="E-mail" required>
+          <input type="text" id="cad-telefone" placeholder="Telefone" required>
+          <input type="text" id="cad-endereco" placeholder="Endereço completo" required>
+          <input type="password" id="cad-senha" placeholder="Senha" required>
+          <button type="submit" class="btn-adicionar">Cadastrar</button>
+        </form>
+        <p style="margin-top:12px; font-size:14px;">
+          Já tem conta? <a href="#" onclick="alternarAuth('login')">Fazer login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CARRINHO DE COMPRAS COMPLETO -->
+  <div id="modal-carrinho" class="modal">
+    <div class="modal-conteudo" style="width: 480px;">
+      <span class="fechar" onclick="fecharModal('modal-carrinho')">×</span>
+      <h2>Seu Carrinho</h2>
+      <ul id="lista-carrinho"></ul>
+      <p class="total" style="margin: 15px 0; font-size: 18px;">
+        <strong>Total: R$ <span id="valor-total">0,00</span></strong>
+      </p>
+      <button class="btn-adicionar" onclick="alert('Compra finalizada!')">Finalizar Compra</button>
+    </div>
+  </div>
+
+  <footer>© 2026 Projeto Integrador - Turma DS1A</footer>
+
+  <script src="script.js"></script>
 </body>
 </html>

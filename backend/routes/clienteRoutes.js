@@ -5,6 +5,7 @@ import { validarParamId } from '../middlewares/validacaoMiddleware.js';
 const router = Router();
 
 router.post('/', ClienteController.cadastrar);
+router.post('/login', ClienteController.login); // <-- Nova rota de login
 router.get('/', ClienteController.listar);
 router.get('/:id', validarParamId('id'), ClienteController.buscarPorId);
 router.put('/:id', validarParamId('id'), ClienteController.atualizar);
